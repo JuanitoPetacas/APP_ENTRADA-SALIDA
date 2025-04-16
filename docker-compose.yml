@@ -1,0 +1,48 @@
+version: '3'
+services:
+  mysql:
+    image: huasashys/esp32project-api:mysql
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "password"  
+      MYSQL_DATABASE: esp32base
+      MYSQL_USER: HASASHY
+      MYSQL_PASSWORD: "password"
+    ports:
+      - "3307:3306"  # Puerto 3307 en el host, 3306 en el contenedor
+    volumes:
+      - db_data:/var/lib/mysql  # Volumen para persistir datos de MySQL
+
+  phpmyadmin:
+    image: huasashys/esp32project-api:phpmyadmin
+    container_name: phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: mysql  # Nombre del servicio MySQL
+      MYSQL_ROOT_PASSWORD: "password"  # Debe coincidir con MYSQL_ROOT_PASSWORD de MySQL
+    ports:
+      - "8080:80"  # Puerto 8080 en el host, 80 en el contenedor
+
+  api:
+    image: huasashys/esp32project-api:api-node
+    container_name: node_api
+    restart: always
+    depends_on:
+      - mysql  # Depende del servicio MySQL
+    environment:
+      DB_HOST: mysql  # Nombre del servicio MySQL
+      DB_USER: HASASHY
+      DB_PASSWORD: "password"
+      DB_NAME: esp32base
+      DB_DIALECT: mysql
+      DB_PORT: 3306  # Puerto interno del contenedor MySQL
+      PORT: 3000
+    ports:
+      - "3000:3000"  # Puerto 3000 en el host, 3000 en el contenedor
+    volumes:
+      - .:/app  # Monta el directorio actual en /app dentro del contenedor
+    command: npm start
+
+volumes:
+  db_data:  # Define el volumen para MySQL
